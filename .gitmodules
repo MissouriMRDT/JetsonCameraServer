@@ -1,0 +1,3 @@
+[submodule "rovecomm"]
+	path = rovecomm
+	url = https://github.com/MissouriMRDT/Rovecomm_Python
