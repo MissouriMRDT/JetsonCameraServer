@@ -24,17 +24,7 @@ class VideoDevice:
         assert not (endpoint in self.output_by_endpoint.keys())
 
         if self.is_streaming():
-            # try:
-            #     self.video_source.Close()
-            #     self.video_source = jetson.utils.videoSource(f"/dev/video{self.device}", ['-input-width=480', '-input-height=360'])
-            #     self.video_source.Open()
-            #     for other_endpoint in self.output_by_endpoint.keys():
-            #         self.output_by_endpoint[other_endpoint] = jetson_utils.videoOutput(f"rtp://{other_ndpoint}")
-            #     self.output_by_endpoint[endpoint] = jetson_utils.videoOutput(f"rtp://{endpoint}")
-            # except Exception:
-            #     self.video_source = None
-            #     print(f"Error creating stream for device {self.device}")
-            self.output_by_endpoint[endpoint] = jetson_utils.video_source(f"{endpoint}", argv=['--width=640', '--height=480', '--headless', '--bitrate=1200000'])
+            self.output_by_endpoint[endpoint] = jetson_utils.videoOutput(f"{endpoint}", argv=['--width=640', '--height=480', '--headless', '--bitrate=1200000'])
         else:
             try:
                 self.video_source = jetson_utils.videoSource(f"/dev/video{self.device}", argv=['--width=640', '--height=480', '--headless', '--bitrate=1200000'])
