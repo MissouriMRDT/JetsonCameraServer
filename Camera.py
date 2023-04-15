@@ -24,6 +24,7 @@ class VideoDevice:
         assert not (endpoint in self.output_by_endpoint.keys())
 
         if self.is_streaming():
+            print("It is streaming")
             self.output_by_endpoint[endpoint] = jetson_utils.videoOutput(f"{endpoint}", argv=['--width=640', '--height=480', '--headless', '--bitrate=1200000'])
         else:
             try:
@@ -35,6 +36,8 @@ class VideoDevice:
                 print(f"Error creating stream for device {self.device}")
                 print(e)
                 self.output_by_endpoint = {}
+                return False
+        return True
 
     def is_streaming(self) -> bool:
         is_streaming = len(self.output_by_endpoint) != 0
@@ -46,12 +49,8 @@ class VideoDevice:
             assert False, "Invalid state in is_streaming"
     
     def remove_endpoint(self, endpoint: str):
-        print("aaaaaaaaaaaaaaa")
         assert endpoint in self.output_by_endpoint.keys()
-        print(self.output_by_endpoint.keys())
-        print("ssssssssssssssssss")
         del self.output_by_endpoint[endpoint]
-        print(self.output_by_endpoint.keys())
         if len(self.output_by_endpoint) == 0:
             self.video_source = None
 
@@ -81,13 +80,11 @@ class StreamManager:
             for index, video_dev in enumerate(self._video_devices):
                 if(video_dev.is_streaming()):
                     try:
-                        #print(video_dev.device)
                         image = video_dev.video_source.Capture(timeout=5000)
                         for output in video_dev.output_by_endpoint.values():
                             output.Render(image)
-                        # image.__delitem__()
                     except Exception as e: 
-                        # print("Error updating streams")
+                        print("Error updating streams")
                         # TODO: Stop streaming this device
                         print(e)
                         pass
@@ -116,15 +113,17 @@ class StreamManager:
                 else:
                     print("change")
                     self._streams[port] = new_dev
+                    print("new_dev")
                     self._video_devices[prev_dev].remove_endpoint(endpoint)
-                    self._video_devices[new_dev].create_stream(endpoint)
+                    print("remove endpoint")
+                    if (self._video_devices[new_dev].create_stream(endpoint)) == 0:
+                        self._streams[port] = prev_dev
+                        self._video_devices[prev_dev].create_stream(endpoint)
 
 
 
 def main():
     streaming_manager = StreamManager()
-    # streaming_manager._video_devices[0].create_stream("192.168.1.69:5000")
-    # streaming_manager._video_devices[1].create_stream("192.168.1.69:5001")
 
     rovecomm_node = RoveComm()
     rovecomm_node.set_callback(manifest["Camera1"]["Commands"]["ChangeCameras"]["dataId"], streaming_manager.change_feeds)
