@@ -49,7 +49,7 @@ class VideoDevice:
             assert False, "Invalid state in is_streaming"
     
     def remove_endpoint(self, endpoint: str):
-        assert endpoint in self.output_by_endpoint.keys()
+        #assert endpoint in self.output_by_endpoint.keys()
         del self.output_by_endpoint[endpoint]
         if len(self.output_by_endpoint) == 0:
             self.video_source = None
@@ -86,6 +86,9 @@ class StreamManager:
                     except Exception as e: 
                         print("Error updating streams")
                         # TODO: Stop streaming this device
+                        copy_endpoints = [elem for elem in video_dev.output_by_endpoint.keys()]
+                        for endpoint in copy_endpoints:
+                            video_dev.remove_endpoint(endpoint)
                         print(e)
                         pass
 
@@ -95,10 +98,11 @@ class StreamManager:
             port, new_dev = packet.data
             endpoint = self._endpoints[port]
             prev_dev = self._streams[port]
-            
+            print(f"prev_dev: {prev_dev}")
             print(f"{port}:{new_dev}")
 
             if prev_dev == new_dev:
+                print("prev_dev == new_dev")
                 #Do nothing, request is already being served
                 return
             elif new_dev == -1:
@@ -108,8 +112,8 @@ class StreamManager:
             else:
                 if prev_dev == -1:
                     print("new")
-                    self._video_devices[new_dev].create_stream(endpoint)
-                    self._streams[port] = new_dev
+                    if  (self._video_devices[new_dev].create_stream(endpoint)):
+                        self._streams[port] = new_dev
                 else:
                     print("change")
                     self._streams[port] = new_dev
