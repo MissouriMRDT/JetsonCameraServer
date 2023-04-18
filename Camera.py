@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 import threading
 import jetson_utils
 from jetson_utils import gstCamera
@@ -69,10 +70,10 @@ class StreamManager:
         for i in range(8):
             self._video_devices.append(VideoDevice(i * 4))
         self._endpoints = [
-            "rtp://192.168.1.69:5000",
-            "rtp://192.168.1.69:5001",
-            "rtp://192.168.1.69:5002",
-            "rtp://192.168.1.69:5003",
+            "rtp://192.168.2.50:5000",
+            "rtp://192.168.2.50:5001",
+            "rtp://192.168.2.50:5002",
+            "rtp://192.168.2.50:5003",
         ]
         self._lock = threading.Lock()
 
@@ -151,7 +152,7 @@ def main():
         previous_time, current_time = current_time, time.time()
         time_delta = current_time - previous_time
         streaming_manager.updateStreams()
-        rovecomm_node.write(RoveCommPacket(manifest["Camera1"]["Telemetry"]["AvailableCameras"]["dataId"],"b",(isdevice(context, 0),),"192.168.1.69"),False)
+        rovecomm_node.write(RoveCommPacket(manifest["Camera1"]["Telemetry"]["AvailableCameras"]["dataId"],"b",(isdevice(context, 0),),"192.168.2.50"),False)
 
         target_time += loop_delta
         sleep_time = target_time - time.time()
