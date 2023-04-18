@@ -1,6 +1,7 @@
 import threading
 import jetson_utils
 from jetson_utils import gstCamera
+from pyudev import core
 import time
 from rovecomm.rovecomm import RoveComm, RoveCommPacket, get_manifest
 
@@ -124,7 +125,15 @@ class StreamManager:
                         self._streams[port] = prev_dev
                         self._video_devices[prev_dev].create_stream(endpoint)
 
+def isdevice(context, inc):
+    num = [0, 0, 0, 0, 0, 0, 0, 0]
+    for device in context.list_devices(subsystem='video4linux'):
+        if inc % 4 == 0 and str(inc) in device.device_node:
+            num[inc//4] = 1
+        inc += 1
 
+    num.reverse()
+    return int(''.join(str(bit) for bit in num),2)
 
 def main():
     streaming_manager = StreamManager()
@@ -134,12 +143,15 @@ def main():
     fps = 30
     loop_delta = 1./fps
 
+    context = core.Context()
+
     current_time = target_time = time.time()
     
     while True:
         previous_time, current_time = current_time, time.time()
         time_delta = current_time - previous_time
         streaming_manager.updateStreams()
+        rovecomm_node.write(RoveCommPacket(manifest["Camera1"]["Telemetry"]["AvailableCameras"]["dataId"],"b",(isdevice(context, 0),),"192.168.1.69"),False)
 
         target_time += loop_delta
         sleep_time = target_time - time.time()
